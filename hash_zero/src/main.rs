@@ -1,15 +1,21 @@
 use regex::Regex;
 use sha256::digest;
+use std::time::Instant;
 
 fn main() {
     let mut nickname = "Soso";
     let mut hashed_nickname = digest(&mut nickname);
+    let start = Instant::now();
+
     loop {
         if check_string_has_4_zeros(&hashed_nickname) == true {
-            println!("has 4 zeros: {}", hashed_nickname);
+            let duration = start.elapsed().as_millis();
+            println!("find 4 zeros: {} in {}ms", hashed_nickname, duration);
             loop {
                 if check_string_has_5_zeros(&hashed_nickname) == true {
-                    println!("has 5 zeros: {}", hashed_nickname);
+                    let duration = start.elapsed().as_millis();
+
+                    println!("find 5 zeros: {} in {}ms", hashed_nickname, duration);
                     break;
                 }
                 hashed_nickname = digest(hashed_nickname);
