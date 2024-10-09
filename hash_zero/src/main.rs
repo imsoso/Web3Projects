@@ -6,30 +6,36 @@ fn main() {
     let nickname = "Soso";
     let mut nonce = 1;
     let mut nickname_nonce = nickname.to_string() + &nonce.to_string();
-    let mut hashed_nickname = digest(nickname_nonce);
+    let mut hashed_nickname = digest(nickname_nonce.clone());
     let start = Instant::now();
 
     loop {
         if check_string_has_4_zeros(&hashed_nickname) == true {
-            let duration = start.elapsed().as_millis();
-            println!("find 4 zeros: {} in {}ms", hashed_nickname, duration);
+            let duration = start.elapsed().as_secs();
+            println!(
+                "{} find 4 zeros: {} in {}s",
+                nickname_nonce, hashed_nickname, duration
+            );
             loop {
                 if check_string_has_5_zeros(&hashed_nickname) == true {
-                    let duration = start.elapsed().as_millis();
+                    let duration = start.elapsed().as_secs();
 
-                    println!("find 5 zeros: {} in {}ms", hashed_nickname, duration);
+                    println!(
+                        "{} find 5 zeros: {} in {}s",
+                        nickname_nonce, hashed_nickname, duration
+                    );
                     break;
                 }
                 nonce += 1;
                 nickname_nonce = nickname.to_string() + &nonce.to_string();
-                hashed_nickname = digest(nickname_nonce);
+                hashed_nickname = digest(nickname_nonce.clone());
             }
             break;
         }
 
         nonce += 1;
         nickname_nonce = nickname.to_string() + &nonce.to_string();
-        hashed_nickname = digest(nickname_nonce);
+        hashed_nickname = digest(nickname_nonce.clone());
     }
 }
 
