@@ -3,8 +3,10 @@ use sha256::digest;
 use std::time::Instant;
 
 fn main() {
-    let mut nickname = "Soso";
-    let mut hashed_nickname = digest(&mut nickname);
+    let nickname = "Soso";
+    let mut nonce = 1;
+    let mut nickname_nonce = nickname.to_string() + &nonce.to_string();
+    let mut hashed_nickname = digest(nickname_nonce);
     let start = Instant::now();
 
     loop {
@@ -18,12 +20,16 @@ fn main() {
                     println!("find 5 zeros: {} in {}ms", hashed_nickname, duration);
                     break;
                 }
-                hashed_nickname = digest(hashed_nickname);
+                nonce += 1;
+                nickname_nonce = nickname.to_string() + &nonce.to_string();
+                hashed_nickname = digest(nickname_nonce);
             }
             break;
         }
 
-        hashed_nickname = digest(hashed_nickname);
+        nonce += 1;
+        nickname_nonce = nickname.to_string() + &nonce.to_string();
+        hashed_nickname = digest(nickname_nonce);
     }
 }
 
