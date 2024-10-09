@@ -1,7 +1,23 @@
 use regex::Regex;
 use sha256::digest;
 
-fn main() {}
+fn main() {
+    let mut nickname = "Soso";
+    let mut hashed_nickname = digest(&mut nickname);
+    loop {
+        if check_string_has_4_zeros(&hashed_nickname) == true {
+            println!("has 4 zeros: {}", hashed_nickname);
+            loop {
+                if check_string_has_5_zeros(&hashed_nickname) == true {
+                    println!("has 5 zeros: {}", hashed_nickname);
+                    break;
+                }
+            }
+            break;
+        }
+        hashed_nickname = digest(hashed_nickname);
+    }
+}
 
 #[cfg(test)]
 mod tests {
