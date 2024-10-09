@@ -12,9 +12,11 @@ fn main() {
                     println!("has 5 zeros: {}", hashed_nickname);
                     break;
                 }
+                hashed_nickname = digest(hashed_nickname);
             }
             break;
         }
+
         hashed_nickname = digest(hashed_nickname);
     }
 }
