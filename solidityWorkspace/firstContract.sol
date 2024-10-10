@@ -17,7 +17,7 @@ contract Counter {
         return counter;
     }
 
-    function add(uint x) public view returns (uint) {
-        return counter + x;
+    function add(uint x) public {
+        counter = counter + x;
     }
 }
