@@ -20,6 +20,14 @@ contract Bank {
         return balances[key];
     }
 
+    function Withdraw() public {
+        uint balance = balances[msg.sender];
+        balances[msg.sender] = 0;
+
+        (bool success, ) = msg.sender.call{value: balance}("");
+        require(success, "Failed to send Ether");
+    }
+
     event Received(address, uint);
     receive() external payable {
         balances[msg.sender] += msg.value;
