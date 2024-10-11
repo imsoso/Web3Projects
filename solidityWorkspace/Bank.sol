@@ -10,22 +10,33 @@
 • 回调函数的理解（receive/fallback）
 • Payable 关键字理解
 • Mapping 、数组使⽤
+• 管理员=合约创造者
 */
 pragma solidity >=0.8.0;
 
 contract Bank {
+    address  owner;
+    constructor()  {
+       owner = msg.sender;
+    }
+
     mapping(address => uint) internal balances;
 
     function CheckBalance(address key) public view returns (uint) {
         return balances[key];
     }
 
-    function Withdraw() public {
-        uint balance = balances[msg.sender];
-        balances[msg.sender] = 0;
+    function withdraw() public {
+        if msg.sender == owner {
+            uint balance = balances[msg.sender];
+            balances[msg.sender] = 0;
 
-        (bool success, ) = msg.sender.call{value: balance}("");
-        require(success, "Failed to send Ether");
+            (bool success, ) = msg.sender.call{value: balance}("");
+            require(success, "Failed to send Ether");
+        } else {
+            
+        }
+
     }
 
     event Received(address, uint);
@@ -59,3 +70,4 @@ contract Bank {
         return top3Amounts;
     }
 }
+
