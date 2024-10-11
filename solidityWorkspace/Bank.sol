@@ -30,4 +30,23 @@ contract Bank {
     fallback() external payable {
         emit FallBacked(msg.sender, msg.value);
     }
+
+    int[3] public top3Amounts;
+
+    function getTop3Amounts(uint value) public {
+        int newValue = int(value);
+        for (uint i = 0; i < top3Amounts.length; i++) {
+            if (newValue > top3Amounts[i]) {
+                for (uint j = top3Amounts.length - 1; j > i; j--) {
+                    top3Amounts[j] = top3Amounts[j - 1];
+                }
+                top3Amounts[i] = newValue;
+                break;
+            }
+        }
+    }
+
+    function getTop3() public view returns (int[3] memory) {
+        return top3Amounts;
+    }
 }
