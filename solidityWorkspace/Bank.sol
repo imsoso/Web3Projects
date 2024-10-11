@@ -2,5 +2,9 @@
 pragma solidity >=0.8.0;
 
 contract Bank {
-    uint public bank;
+    mapping(address => uint) public deposits;
+
+    function deposit() public payable {
+        deposits[msg.sender] += msg.value;
+    }
 }
