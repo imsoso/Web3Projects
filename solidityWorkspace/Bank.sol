@@ -16,7 +16,7 @@ pragma solidity >=0.8.0;
 contract Bank {
     mapping(address => uint) public balances;
 
-    function get(address key) public view returns (uint) {
+    function CheckBalance(address key) public view returns (uint) {
         return balances[key];
     }
 
@@ -46,7 +46,7 @@ contract Bank {
         }
     }
 
-    function getTop3() public view returns (int[3] memory) {
+    function Top3Balance() public view returns (int[3] memory) {
         return top3Amounts;
     }
 }
