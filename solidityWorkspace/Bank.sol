@@ -22,6 +22,7 @@ contract Bank {
 
     event Received(address, uint);
     receive() external payable {
+        balances[msg.sender] += msg.value;
         emit Received(msg.sender, msg.value);
     }
 
