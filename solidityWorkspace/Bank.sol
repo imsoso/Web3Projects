@@ -14,7 +14,7 @@
 pragma solidity >=0.8.0;
 
 contract Bank {
-    mapping(address => uint) public balances;
+    mapping(address => uint) internal balances;
 
     function CheckBalance(address key) public view returns (uint) {
         return balances[key];
@@ -23,6 +23,7 @@ contract Bank {
     event Received(address, uint);
     receive() external payable {
         balances[msg.sender] += msg.value;
+        getTop3Amounts(balances[msg.sender]);
         emit Received(msg.sender, msg.value);
     }
 
@@ -31,9 +32,9 @@ contract Bank {
         emit FallBacked(msg.sender, msg.value);
     }
 
-    int[3] public top3Amounts;
+    int[3] top3Amounts;
 
-    function getTop3Amounts(uint value) public {
+    function getTop3Amounts(uint value) internal {
         int newValue = int(value);
         for (uint i = 0; i < top3Amounts.length; i++) {
             if (newValue > top3Amounts[i]) {
