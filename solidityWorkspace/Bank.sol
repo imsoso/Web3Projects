@@ -27,16 +27,12 @@ contract Bank {
     }
 
     function withdraw() public {
-        if msg.sender == owner {
-            uint balance = balances[msg.sender];
-            balances[msg.sender] = 0;
+        require(msg.sender == owner, "Only admin can withdraw");
+        uint balance = balances[msg.sender];
+        balances[msg.sender] = 0;
 
-            (bool success, ) = msg.sender.call{value: balance}("");
-            require(success, "Failed to send Ether");
-        } else {
-            
-        }
-
+        (bool success, ) = msg.sender.call{value: balance}("");
+        require(success, "Failed to send Ether");
     }
 
     event Received(address, uint);
