@@ -15,9 +15,9 @@
 pragma solidity >=0.8.0;
 
 contract Bank {
-    address  owner;
-    constructor()  {
-       owner = msg.sender;
+    address owner;
+    constructor() {
+        owner = msg.sender;
     }
 
     mapping(address => uint) internal balances;
@@ -66,4 +66,3 @@ contract Bank {
         return top3Amounts;
     }
 }
-
