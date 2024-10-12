@@ -27,3 +27,10 @@ contract BigBank is Bank {
         balances[msg.sender] += msg.value;
     }
 }
+
+contract Admin {
+    address owner;
+    constructor() {
+        owner = msg.sender;
+    }
+}
