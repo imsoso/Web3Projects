@@ -17,4 +17,13 @@ interface IBank {
     function withdraw() external;
 }
 
-contract BigBank is Bank {}
+contract BigBank is Bank {
+    modifier leastEther() {
+        require(msg.value >= 0.001 ether);
+        _;
+    }
+
+    function Deposit() external payable leastEther {
+        balances[msg.sender] += msg.value;
+    }
+}
