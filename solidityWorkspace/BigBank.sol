@@ -10,8 +10,11 @@ BigBank 和 Admin 合约 部署后，把 BigBank 的管理员转移给 Admin 合
 
 Admin 合约的Owner地址调用 adminWithdraw(IBank bank) 把 BigBank 的资金转移到 Admin 地址。
 */
-pragma solidity >=0.8.28;
+pragma solidity >=0.8.0;
+import "./Bank.sol";
 
 interface IBank {
     function withdraw() external;
 }
+
+contract BigBank is Bank {}
