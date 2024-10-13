@@ -24,6 +24,13 @@ contract BigBank is Bank {
     function transferAdminPrivilege(address newAdmin) external {
         owner = newAdmin;
     }
+
+    function withdraw() external override {
+        require(msg.sender == owner, "Only admin can withdraw");
+        uint balance = address(this).balance;
+        (bool success, ) = owner.call{value: balance}("");
+        require(success, "Failed to send Ether");
+    }
 }
 
 contract Admin {
@@ -31,6 +38,12 @@ contract Admin {
     constructor() {
         owner = msg.sender;
     }
+
+    function adminWithdraw(BigBank bank) external {
+        require(msg.sender == owner, "Only admin can withdraw");
+        bank.withdraw();
+    }
+
     event Received(address, uint);
     receive() external payable {
         emit Received(msg.sender, msg.value);
