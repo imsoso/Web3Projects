@@ -20,6 +20,10 @@ contract BigBank is Bank {
     function Deposit() external payable leastEther {
         balances[msg.sender] += msg.value;
     }
+
+    function transferAdminPrivilege(address newAdmin) external {
+        owner = newAdmin;
+    }
 }
 
 contract Admin {
