@@ -11,10 +11,6 @@ Admin 合约的Owner地址调用 adminWithdraw(IBank bank) 把 BigBank 的资金
 pragma solidity >=0.8.0;
 import "./Bank.sol";
 
-interface IBank {
-    function withdraw() external;
-}
-
 contract BigBank is Bank {
     modifier leastEther() {
         require(msg.value >= 0.001 ether);
