@@ -13,8 +13,11 @@
 • 管理员=合约创造者
 */
 pragma solidity >=0.8.0;
+interface IBank {
+    function withdraw() external;
+}
 
-contract Bank {
+contract Bank is IBank {
     address owner;
     constructor() {
         owner = msg.sender;
@@ -26,7 +29,7 @@ contract Bank {
         return balances[key];
     }
 
-    function withdraw() public {
+    function withdraw() external virtual {
         require(msg.sender == owner, "Only admin can withdraw");
         uint balance = balances[msg.sender];
         balances[msg.sender] = 0;
