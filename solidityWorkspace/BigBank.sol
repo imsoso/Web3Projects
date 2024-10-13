@@ -31,4 +31,13 @@ contract Admin {
     constructor() {
         owner = msg.sender;
     }
+    event Received(address, uint);
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
+    event FallBacked(address, uint);
+    fallback() external payable {
+        emit FallBacked(msg.sender, msg.value);
+    }
 }
