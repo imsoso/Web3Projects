@@ -10,7 +10,7 @@ withdraw（）: 用户可以提取自己的之前存入的 token，管理员可�
 */
 import "./MyERCToken.sol";
 
-contract TokenBank is BaseERC20 {
+contract TokenBank {
     address admin;
     BaseERC20 public token;
 
