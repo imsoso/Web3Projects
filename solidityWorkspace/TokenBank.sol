@@ -21,12 +21,27 @@ contract TokenBank {
         token = _token;
     }
 
-    function withdraw() external virtual {
-        uint balance = balances[msg.sender];
-        balances[msg.sender] = 0;
+    // 提取函数：用户提取自己的 token，管理员可以提取所有 token
+    function withdraw(uint256 amount) public {
+        if (msg.sender == admin) {
+            // 管理员提取所有的 token
+            uint256 contractBalance = token.balanceOf(address(this));
+            require(contractBalance > 0, "No tokens to withdraw");
 
-        (bool success, ) = msg.sender.call{value: balance}("");
-        require(success, "Failed to send Ether");
+            bool success = token.transfer(admin, contractBalance);
+            require(success, "Admin withdraw failed");
+        } else {
+            // 普通用户提取自己存入的 token
+            require(amount > 0, "Amount must be greater than 0");
+            require(balances[msg.sender] >= amount, "Insufficient balance");
+
+            // 更新用户余额
+            balances[msg.sender] -= amount;
+
+            // 转账给用户
+            bool success = token.transfer(msg.sender, amount);
+            require(success, "User withdraw failed");
+        }
     }
 
     function deposit(uint256 amount) public {
