@@ -8,14 +8,18 @@ TokenBank 有两个方法：
 deposit() : 需要记录每个地址的存入数量；
 withdraw（）: 用户可以提取自己的之前存入的 token，管理员可以提取所有的token。
 */
+import "./MyERCToken.sol";
 
-contract TokenBank {
-    address owner;
-    constructor() {
-        owner = msg.sender;
-    }
+contract TokenBank is BaseERC20 {
+    address admin;
+    BaseERC20 public token;
 
     mapping(address => uint) internal balances;
+
+    constructor(BaseERC20 _token) {
+        admin = msg.sender;
+        token = _token;
+    }
 
     function withdraw() external virtual {
         uint balance = balances[msg.sender];
@@ -25,8 +29,13 @@ contract TokenBank {
         require(success, "Failed to send Ether");
     }
 
-    function deposit() external payable {
-        balances[msg.sender] += msg.value;
+    function deposit(uint256 amount) public {
+        // 将用户的 token 转移到 TokenBank 合约中
+        bool success = token.transferFrom(msg.sender, address(this), amount);
+        require(success, "Token transfer failed");
+
+        // 记录用户的存款
+        balances[msg.sender] += amount;
     }
 
     event Received(address, uint);
