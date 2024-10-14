@@ -37,15 +37,4 @@ contract TokenBank is BaseERC20 {
         // 记录用户的存款
         balances[msg.sender] += amount;
     }
-
-    event Received(address, uint);
-    receive() external payable {
-        balances[msg.sender] += msg.value;
-        emit Received(msg.sender, msg.value);
-    }
-
-    event FallBacked(address, uint);
-    fallback() external payable {
-        emit FallBacked(msg.sender, msg.value);
-    }
 }
