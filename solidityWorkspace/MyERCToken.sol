@@ -44,11 +44,12 @@ contract BaseERC20 {
         uint256 value
     );
 
-    constructor() public {
+    constructor() {
         name = "BaseERC20";
         symbol = "BERC20";
         decimals = 18;
-        totalSupply = 100000000;
+        totalSupply = 100000000 * 10 ** uint256(decimals);
+
         balances[msg.sender] = totalSupply;
     }
 
