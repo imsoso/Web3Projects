@@ -66,8 +66,9 @@ contract BaseERC721 {
         string memory symbol_,
         string memory baseURI_
     ) {
-        /**code*/
-
+        _name = name_;
+        _symbol = symbol_;
+        _baseURI = baseURI_;
     }
 
     /**
@@ -77,23 +78,21 @@ contract BaseERC721 {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
             interfaceId == 0x80ac58cd || // ERC165 Interface ID for ERC721
-            interfaceId == 0x5b5e139f;   // ERC165 Interface ID for ERC721Metadata
+            interfaceId == 0x5b5e139f; // ERC165 Interface ID for ERC721Metadata
     }
-    
+
     /**
      * @dev See {IERC721Metadata-name}.
      */
     function name() public view returns (string memory) {
-        /**code*/
-
+        return _name;
     }
 
     /**
      * @dev See {IERC721Metadata-symbol}.
      */
     function symbol() public view returns (string memory) {
-        /**code*/
-        
+        return _symbol;
     }
 
     /**
@@ -101,12 +100,10 @@ contract BaseERC721 {
      */
     function tokenURI(uint256 tokenId) public view returns (string memory) {
         require(
-            /**code*/,
+            _exists(tokenId),
             "ERC721Metadata: URI query for nonexistent token"
         );
-
-        // should return baseURI
-        /**code*/
+        return _baseURI;
     }
 
     /**
@@ -121,10 +118,14 @@ contract BaseERC721 {
      * Emits a {Transfer} event.
      */
     function mint(address to, uint256 tokenId) public {
-        require(/**code*/ , "ERC721: mint to the zero address");
-        require(/**code*/, "ERC721: token already minted");
+        require(to != address(0), "ERC721: mint to the zero address");
+        require(_exists(tokenId) == false, "ERC721: token already minted");
 
-        /**code*/
+        // Update the token's owner
+        _owners[tokenId] = to;
+
+        // Update the owner's balance
+        _balances[to]++;
 
         emit Transfer(address(0), to, tokenId);
     }
@@ -133,14 +134,14 @@ contract BaseERC721 {
      * @dev See {IERC721-balanceOf}.
      */
     function balanceOf(address owner) public view returns (uint256) {
-        /**code*/
+        return _balances[owner];
     }
 
     /**
      * @dev See {IERC721-ownerOf}.
      */
     function ownerOf(uint256 tokenId) public view returns (address) {
-        /**code*/
+        return _owners[tokenId];
     }
 
     /**
@@ -148,14 +149,14 @@ contract BaseERC721 {
      */
     function approve(address to, uint256 tokenId) public {
         address owner = ownerOf(tokenId);
-        require(/**code*/, "ERC721: approval to current owner");
+        require(owner != to, "ERC721: approval to current owner");
 
         require(
-            /**code*/,
+            isApprovedForAll(owner, msg.sender) || owner == msg.sender,
             "ERC721: approve caller is not owner nor approved for all"
         );
 
-       _approve(to, tokenId);
+        _tokenApprovals[tokenId] = to;
     }
 
     /**
@@ -163,11 +164,11 @@ contract BaseERC721 {
      */
     function getApproved(uint256 tokenId) public view returns (address) {
         require(
-            /**code*/,
+            _exists(tokenId),
             "ERC721: approved query for nonexistent token"
         );
 
-        /**code*/
+        return _tokenApprovals[tokenId];
     }
 
     /**
@@ -175,10 +176,9 @@ contract BaseERC721 {
      */
     function setApprovalForAll(address operator, bool approved) public {
         address sender = msg.sender;
-        require(/**code*/, "ERC721: approve to caller");
-        
-        /**code*/
+        require(sender != operator, "ERC721: approve to caller");
 
+        _operatorApprovals[sender][operator] = approved;
         emit ApprovalForAll(sender, operator, approved);
     }
 
@@ -189,12 +189,20 @@ contract BaseERC721 {
         address owner,
         address operator
     ) public view returns (bool) {
-        /**code*/
+        return _operatorApprovals[owner][operator];
     }
-
+    // ✔ owner account should succeed and balance should change (53ms)
+    // ✔ approved account should succeed and balance should change (61ms)
+    // 2) approvedForAll account should succeed and balance should change
+    // ✔ not owner nor approved should revert
+    // 3) none exists tokenId should revert
+    // 4) to zero address should revert
+    // 5) from != caller.address should revert
+    // 6) should revoke old approval when token transfered
     /**
      * @dev See {IERC721-transferFrom}.
      */
+
     function transferFrom(address from, address to, uint256 tokenId) public {
         require(
             _isApprovedOrOwner(msg.sender, tokenId),
@@ -212,7 +220,11 @@ contract BaseERC721 {
         address to,
         uint256 tokenId
     ) public {
-        safeTransferFrom(from, to, tokenId, "");
+        require(
+            _isApprovedOrOwner(from, tokenId),
+            "ERC721: transfer caller is not owner nor approved"
+        );
+        _safeTransfer(from, to, tokenId, "");
     }
 
     /**
@@ -225,7 +237,7 @@ contract BaseERC721 {
         bytes memory _data
     ) public {
         require(
-            _isApprovedOrOwner(msg.sender, tokenId),
+            _isApprovedOrOwner(from, tokenId),
             "ERC721: transfer caller is not owner nor approved"
         );
         _safeTransfer(from, to, tokenId, _data);
@@ -255,11 +267,11 @@ contract BaseERC721 {
         uint256 tokenId,
         bytes memory _data
     ) internal {
-        _transfer(from, to, tokenId);
         require(
             _checkOnERC721Received(from, to, tokenId, _data),
             "ERC721: transfer to non ERC721Receiver implementer"
         );
+        _transfer(from, to, tokenId);
     }
 
     /**
@@ -271,7 +283,7 @@ contract BaseERC721 {
      * and stop existing when they are burned (`_burn`).
      */
     function _exists(uint256 tokenId) internal view returns (bool) {
-        /**code*/
+        return _owners[tokenId] != address(0);
     }
 
     /**
@@ -285,12 +297,10 @@ contract BaseERC721 {
         address spender,
         uint256 tokenId
     ) internal view returns (bool) {
-        require(
-            /**code*/,
-            "ERC721: operator query for nonexistent token"
-        );
+        require(tokenId > 0, "ERC721: operator query for nonexistent token");
 
-        /**code*/
+        return
+            _tokenApprovals[tokenId] == spender || _owners[tokenId] == spender;
     }
 
     /**
@@ -304,26 +314,43 @@ contract BaseERC721 {
      *
      * Emits a {Transfer} event.
      */
+    // function _transfer(address from, address to, uint256 tokenId) internal {
+    //     require(
+    //         ownerOf(tokenId) == from,
+    //         "ERC721: transfer from incorrect owner"
+    //     );
+
+    //     require(to != address(0), "ERC721: transfer to the zero address");
+
+    //     _balances[from]--;
+    //     _balances[to]++;
+    //     _owners[tokenId] = to;
+
+    //     emit Transfer(from, to, tokenId);
+    // }
     function _transfer(address from, address to, uint256 tokenId) internal {
         require(
-           /**code*/,
+            from == ownerOf(tokenId),
             "ERC721: transfer from incorrect owner"
         );
+        require(to != address(0), "ERC721: transfer to the zero address");
 
-        require(/**code*/, "ERC721: transfer to the zero address");
+        // 清除原所有者的 token 授权
+        _approve(address(0), tokenId);
 
-        /**code*/
+        _owners[tokenId] = to;
+        _balances[from] -= 1;
+        _balances[to] += 1;
 
         emit Transfer(from, to, tokenId);
     }
-
     /**
      * @dev Approve `to` to operate on `tokenId`
      *
      * Emits a {Approval} event.
      */
     function _approve(address to, uint256 tokenId) internal virtual {
-        /**code*/
+        approve(to, tokenId);
 
         emit Approval(ownerOf(tokenId), to, tokenId);
     }
@@ -344,7 +371,8 @@ contract BaseERC721 {
         uint256 tokenId,
         bytes memory _data
     ) private returns (bool) {
-        if (to.isContract()) {
+        if (address(to).code.length > 0) {
+            // Check for contract code existence.
             try
                 IERC721Receiver(to).onERC721Received(
                     msg.sender,
