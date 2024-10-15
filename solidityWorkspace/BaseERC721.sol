@@ -104,6 +104,10 @@ contract BaseERC721 {
             "ERC721Metadata: URI query for nonexistent token"
         );
         return _baseURI;
+        //        return string(abi.encodePacked(_baseURI, tokenId.toString()));
+        // 函数可以动态地生成每个代币的 URI
+        // 假设 _baseURI 是 "https://example.com/api/token/"，并且 tokenId 是 1
+        // https://example.com/api/token/1
     }
 
     /**
@@ -118,14 +122,11 @@ contract BaseERC721 {
      * Emits a {Transfer} event.
      */
     function mint(address to, uint256 tokenId) public {
-        require(to != address(0), "ERC721: mint to the zero address");
-        require(_exists(tokenId) == false, "ERC721: token already minted");
+        require(address(to) != address(0), "ERC721: mint to the zero address");
+        require(_owners[tokenId] == address(0), "ERC721: token already minted");
 
-        // Update the token's owner
         _owners[tokenId] = to;
-
-        // Update the owner's balance
-        _balances[to]++;
+        _balances[to] += 1;
 
         emit Transfer(address(0), to, tokenId);
     }
@@ -149,14 +150,14 @@ contract BaseERC721 {
      */
     function approve(address to, uint256 tokenId) public {
         address owner = ownerOf(tokenId);
-        require(owner != to, "ERC721: approval to current owner");
+        require(owner != address(to), "ERC721: approval to current owner");
 
         require(
-            isApprovedForAll(owner, msg.sender) || owner == msg.sender,
+            msg.sender == owner || isApprovedForAll(owner, msg.sender),
             "ERC721: approve caller is not owner nor approved for all"
         );
 
-        _tokenApprovals[tokenId] = to;
+        _approve(to, tokenId);
     }
 
     /**
@@ -167,7 +168,6 @@ contract BaseERC721 {
             _exists(tokenId),
             "ERC721: approved query for nonexistent token"
         );
-
         return _tokenApprovals[tokenId];
     }
 
@@ -179,6 +179,7 @@ contract BaseERC721 {
         require(sender != operator, "ERC721: approve to caller");
 
         _operatorApprovals[sender][operator] = approved;
+
         emit ApprovalForAll(sender, operator, approved);
     }
 
@@ -191,18 +192,10 @@ contract BaseERC721 {
     ) public view returns (bool) {
         return _operatorApprovals[owner][operator];
     }
-    // ✔ owner account should succeed and balance should change (53ms)
-    // ✔ approved account should succeed and balance should change (61ms)
-    // 2) approvedForAll account should succeed and balance should change
-    // ✔ not owner nor approved should revert
-    // 3) none exists tokenId should revert
-    // 4) to zero address should revert
-    // 5) from != caller.address should revert
-    // 6) should revoke old approval when token transfered
+
     /**
      * @dev See {IERC721-transferFrom}.
      */
-
     function transferFrom(address from, address to, uint256 tokenId) public {
         require(
             _isApprovedOrOwner(msg.sender, tokenId),
@@ -220,11 +213,7 @@ contract BaseERC721 {
         address to,
         uint256 tokenId
     ) public {
-        require(
-            _isApprovedOrOwner(from, tokenId),
-            "ERC721: transfer caller is not owner nor approved"
-        );
-        _safeTransfer(from, to, tokenId, "");
+        safeTransferFrom(from, to, tokenId, "");
     }
 
     /**
@@ -237,7 +226,7 @@ contract BaseERC721 {
         bytes memory _data
     ) public {
         require(
-            _isApprovedOrOwner(from, tokenId),
+            _isApprovedOrOwner(msg.sender, tokenId),
             "ERC721: transfer caller is not owner nor approved"
         );
         _safeTransfer(from, to, tokenId, _data);
@@ -267,11 +256,11 @@ contract BaseERC721 {
         uint256 tokenId,
         bytes memory _data
     ) internal {
+        _transfer(from, to, tokenId);
         require(
             _checkOnERC721Received(from, to, tokenId, _data),
             "ERC721: transfer to non ERC721Receiver implementer"
         );
-        _transfer(from, to, tokenId);
     }
 
     /**
@@ -297,10 +286,16 @@ contract BaseERC721 {
         address spender,
         uint256 tokenId
     ) internal view returns (bool) {
-        require(tokenId > 0, "ERC721: operator query for nonexistent token");
+        // 该函数用于检查给定的 spender 是否有权管理指定的 tokenId
+        require(
+            _exists(tokenId),
+            "ERC721: operator query for nonexistent token"
+        );
 
-        return
-            _tokenApprovals[tokenId] == spender || _owners[tokenId] == spender;
+        address owner = ownerOf(tokenId);
+        return (spender == owner ||
+            isApprovedForAll(owner, spender) ||
+            getApproved(tokenId) == spender);
     }
 
     /**
@@ -314,20 +309,6 @@ contract BaseERC721 {
      *
      * Emits a {Transfer} event.
      */
-    // function _transfer(address from, address to, uint256 tokenId) internal {
-    //     require(
-    //         ownerOf(tokenId) == from,
-    //         "ERC721: transfer from incorrect owner"
-    //     );
-
-    //     require(to != address(0), "ERC721: transfer to the zero address");
-
-    //     _balances[from]--;
-    //     _balances[to]++;
-    //     _owners[tokenId] = to;
-
-    //     emit Transfer(from, to, tokenId);
-    // }
     function _transfer(address from, address to, uint256 tokenId) internal {
         require(
             from == ownerOf(tokenId),
@@ -344,14 +325,14 @@ contract BaseERC721 {
 
         emit Transfer(from, to, tokenId);
     }
+
     /**
      * @dev Approve `to` to operate on `tokenId`
      *
      * Emits a {Approval} event.
      */
     function _approve(address to, uint256 tokenId) internal virtual {
-        approve(to, tokenId);
-
+        _tokenApprovals[tokenId] = to;
         emit Approval(ownerOf(tokenId), to, tokenId);
     }
 
@@ -371,8 +352,7 @@ contract BaseERC721 {
         uint256 tokenId,
         bytes memory _data
     ) private returns (bool) {
-        if (address(to).code.length > 0) {
-            // Check for contract code existence.
+        if (to.isContract()) {
             try
                 IERC721Receiver(to).onERC721Received(
                     msg.sender,
