@@ -15,7 +15,11 @@ contract MyERCTokenHook is BaseERC20 {
         if (_to == address(this)) {
             require(_to != address(0), "ERC20: transfer to the zero address");
             // 调用目标合约的 tokensReceived() 方法
-            // (bool success, ) = _to.tokensReceived(msg.sender, _value);
+            (bool success, ) = _to.call(
+                abi.encodeWithSignature("tokensReceived(uint256)", _value)
+            );
+
+            require(success, "ERC20: transfer failed");
         } else {
             super.transfer(_to, _value);
         }
