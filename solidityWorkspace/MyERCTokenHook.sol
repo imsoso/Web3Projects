@@ -9,4 +9,15 @@ import "./MyERCToken.sol";
 （备注：TokenBankV2 需要实现 tokensReceived 来实现存款记录工作）
 */
 
-contract MyERCTokenHook is BaseERC20 {}
+contract MyERCTokenHook is BaseERC20 {
+    function transferWithCallback(address _to, uint256 _value) public {
+        // 目标地址是合约地址
+        if (_to == address(this)) {
+            require(_to != address(0), "ERC20: transfer to the zero address");
+            // 调用目标合约的 tokensReceived() 方法
+            // (bool success, ) = _to.tokensReceived(msg.sender, _value);
+        } else {
+            super.transfer(_to, _value);
+        }
+    }
+}
