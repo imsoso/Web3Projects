@@ -15,8 +15,19 @@
  */
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract SosoNFT is ERC721 {
-    constructor() public ERC721("SosoNFT", "SSFT") {}
+contract SosoNFT is ERC721URIStorage {
+    Counters.Counter private _tokenIds;
+    constructor() ERC721("SosoNFT", "SSFT") {}
+
+    function mint(address to, string memory uri) public returns (uint256) {
+        _tokenIds.increment();
+
+        uint256 tokenID = _tokenIds.current();
+        _mint(to, tokenID);
+        _setTokenURI(tokenID, uri);
+        return tokenID;
+    }
 }
