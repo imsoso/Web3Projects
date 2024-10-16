@@ -10,22 +10,34 @@ import "./MyERCToken.sol";
 */
 
 contract MyERCTokenHook is BaseERC20 {
-    function transferWithCallback(address _to, uint256 _value) public {
-        // 目标地址是合约地址
-        if (_to == address(this)) {
-            require(_to != address(0), "ERC20: transfer to the zero address");
+    // 转帐, recipient 可能是合约或者用户
+    function transferWithCallback(
+        address _to,
+        uint256 _value
+    ) external returns (bool) {
+        require(
+            balances[msg.sender] >= _value,
+            "ERC20: transfer amount exceeds balance"
+        );
+        bool success = transfer(_to, _value);
+        require(success, "transfer fail");
+        // 是否是合约
+        if (isContract(_to)) {
             // 调用目标合约的 tokensReceived() 方法
-            (bool success, ) = _to.call(
+            (success, ) = _to.call(
                 abi.encodeWithSignature(
                     "tokensReceived(address,uint256)",
                     msg.sender,
                     _value
                 )
             );
-
-            require(success, "ERC20: transfer failed");
-        } else {
-            super.transfer(_to, _value);
+            require(success, "tokensReceived fail");
         }
+
+        return true;
+    }
+
+    function isContract(address addr) public view returns (bool) {
+        return addr.code.length != 0;
     }
 }
